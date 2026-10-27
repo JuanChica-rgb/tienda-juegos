@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal de Juegos & APKs</title>
+    <style>
+        :root {
+            --bg-dark: #121212;
+            --card-bg: #1e1e1e;
+            --accent: #bb86fc;
+            --accent-hover: #9965f4;
+            --text-main: #e0e0e0;
+            --text-sub: #a0a0a0;
+            --star-color: #f1c40f;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #333;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .logo-container img { max-height: 50px; }
+        .logo-container h1 { margin: 0; color: var(--accent); }
+
+        .btn {
+            background: var(--accent);
+            color: #000;
+            border: none;
+            padding: 8px 16px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn:hover { background: var(--accent-hover); }
+
+        /* Buscador y Tags */
+        .controls { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .search-bar {
+            flex-grow: 1;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #333;
+            background: #2c2c2c;
+            color: #fff;
+        }
+
+        .tags-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+        .tag-pill {
+            background: #2a2a2a;
+            padding: 5px 12px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.9em;
+            border: 1px solid #444;
+        }
+        .tag-pill.active { background: var(--accent); color: #000; }
+
+        /* Grid de Juegos */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card img { width: 100%; height: 180px; object-fit: cover; }
+        .card-content { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; }
+        .card-title { margin: 0 0 10px 0; color: #fff; }
+        .card-desc { color: var(--text-sub); font-size: 0.9em; flex-grow: 1; }
+
+        .badge {
+            display: inline-block;
+            background: #333;
+            color: var(--accent);
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            margin-right: 5px;
+            margin-top: 5px;
+        }
+
+        .links-descarga { margin-top: 15px; }
+        .link-btn {
+            display: inline-block;
+            background: #2980b9;
+            color: #fff;
+            text-decoration: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            margin: 2px;
+        }
+
+        /* Panel Admin */
+        .admin-panel {
+            background: #252525;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid var(--accent);
+            display: none;
+        }
+
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; margin-bottom: 5px; color: var(--text-sub); }
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%; padding: 8px; background: #1a1a1a; border: 1px solid #444; color: #fff; border-radius: 4px; box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-container" id="logo-header">
+            <h1 id="site-title">Portal Games</h1>
+        </div>
+        <div>
+            <button class="btn" id="btn-admin-login" onclick="toggleAdminModal()">Login Admin</button>
+            <button class="btn" id="btn-admin-logout" style="display:none;" onclick="logoutAdmin()">Cerrar Admin</button>
+        </div>
+    </header>
+
+    <!-- Panel de Control Admin -->
+    <div class="admin-panel" id="admin-panel">
+        <h2>Panel de Administración</h2>
+        
+        <!-- Configuración de la Web -->
+        <h3>Personalización</h3>
+        <div class="form-group">
+            <label>Título del Sitio:</label>
+            <input type="text" id="cfg-titulo" placeholder="Ej: Mi Portal VN">
+        </div>
+        <div class="form-group">
+            <label>URL del Logo/Banner:</label>
+            <input type="text" id="cfg-logo" placeholder="https://link-de-imagen.png">
+            <button class="btn" style="margin-top: 5px;" onclick="guardarConfig()">Actualizar Header</button>
+        </div>
+
+        <hr style="border-color: #444; margin: 20px 0;">
+
+        <!-- Subir nuevo Juego -->
+        <h3>Publicar Nuevo Juego</h3>
+        <div class="form-group">
+            <label>Título del Juego:</label>
+            <input type="text" id="juego-titulo" required>
+        </div>
+        <div class="form-group">
+            <label>Descripción / Sinopsis:</label>
+            <textarea id="juego-desc" rows="3"></textarea>
+        </div>
+        <div class="form-group">
+            <label>Plataforma:</label>
+            <select id="juego-plat">
+                <option value="PC">PC</option>
+                <option value="APK">Android (APK)</option>
+                <option value="Ambos">PC & Android</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>URL de la Portada:</label>
+            <input type="text" id="juego-img" placeholder="https://...">
+        </div>
+        <div class="form-group">
+            <label>Tags (separados por coma):</label>
+            <input type="text" id="juego-tags" placeholder="Anime, 3D, Terror, Novela Visual">
+        </div>
+        
+        <h4>Enlaces de Descarga</h4>
+        <div id="enlaces-container">
+            <div class="form-group" style="display:flex; gap:10px;">
+                <input type="text" placeholder="Servidor (Ej: Mega)" class="srv-nombre">
+                <input type="text" placeholder="URL de Descarga" class="srv-url">
+            </div>
+        </div>
+        <button class="btn" onclick="agregarCampoEnlace()">+ Otro Servidor</button>
+        <br><br>
+        <button class="btn" style="background:#2ecc71; width:100%;" onclick="publicarJuego()">Guardar y Publicar</button>
+    </div>
+
+    <!-- Buscador y Filtros -->
+    <div class="controls">
+        <input type="text" class="search-bar" id="search-input" placeholder="Buscar por título o historia..." onkeyup="cargarJuegos()">
+    </div>
+    
+    <div class="tags-bar" id="tags-bar">
+        <!-- Tags dinámicos -->
+    </div>
+
+    <!-- Catálogo -->
+    <div class="grid" id="juegos-grid">
+        <!-- Tarjetas dinámicas -->
+    </div>
+
+    <script>
+        let currentTag = '';
+
+        async function init() {
+            await cargarTags();
+            await cargarJuegos();
+        }
+
+        async function cargarTags() {
+            const res = await fetch('/api/tags');
+            const data = await res.json();
+            const container = document.getElementById('tags-bar');
+            container.innerHTML = `<span class="tag-pill ${currentTag===''?'active':''}" onclick="filtrarTag('')">Todos</span>`;
+            data.tags.forEach(t => {
+                container.innerHTML += `<span class="tag-pill ${currentTag===t?'active':''}" onclick="filtrarTag('${t}')">${t}</span>`;
+            });
+        }
+
+        function filtrarTag(tag) {
+            currentTag = tag;
+            cargarTags();
+            cargarJuegos();
+        }
+
+        async function cargarJuegos() {
+            const query = document.getElementById('search-input').value;
+            const res = await fetch(`/api/juegos?tag=${currentTag}&q=${query}`);
+            const data = await res.json();
+
+            // Ajustar UI de Admin según sesión
+            if (data.config.es_admin) {
+                document.getElementById('admin-panel').style.display = 'block';
+                document.getElementById('btn-admin-login').style.display = 'none';
+                document.getElementById('btn-admin-logout').style.display = 'inline-block';
+            }
+
+            if(data.config.titulo_web) {
+                document.getElementById('site-title').innerText = data.config.titulo_web;
+            }
+
+            const grid = document.getElementById('juegos-grid');
+            grid.innerHTML = '';
+
+            data.juegos.forEach(j => {
+                let tagsHTML = j.tags.map(t => `<span class="badge">${t}</span>`).join('');
+                let linksHTML = j.enlaces.map(e => `<a href="${e.url}" target="_blank" class="link-btn">⬇ ${e.servidor}</a>`).join('');
+                
+                grid.innerHTML += `
+                    <div class="card">
+                        <img src="${j.imagen_url || 'https://via.placeholder.com/300x180?text=Sin+Imagen'}" alt="${j.titulo}">
+                        <div class="card-content">
+                            <h3 class="card-title">${j.titulo}</h3>
+                            <div><span class="badge" style="background:var(--accent); color:#000;">${j.plataforma}</span></div>
+                            <p class="card-desc">${j.descripcion}</p>
+                            <div>${tagsHTML}</div>
+                            <div class="links-descarga">${linksHTML}</div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function toggleAdminModal() {
+            const email = prompt("Correo de Admin:");
+            const password = prompt("Contraseña:");
+            if (email && password) {
+                fetch('/api/login-admin', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({email, password})
+                }).then(r => r.json()).then(data => {
+                    if(data.status === 'ok') location.reload();
+                    else alert(data.mensaje);
+                });
+            }
+        }
+
+        function logoutAdmin() {
+            fetch('/api/admin/logout', {method:'POST'}).then(() => location.reload());
+        }
+
+        function agregarCampoEnlace() {
+            const container = document.getElementById('enlaces-container');
+            container.innerHTML += `
+                <div class="form-group" style="display:flex; gap:10px;">
+                    <input type="text" placeholder="Servidor (Ej: Drive)" class="srv-nombre">
+                    <input type="text" placeholder="URL de Descarga" class="srv-url">
+                </div>
+            `;
+        }
+
+        async function publicarJuego() {
+            const titulo = document.getElementById('juego-titulo').value;
+            const descripcion = document.getElementById('juego-desc').value;
+            const plataforma = document.getElementById('juego-plat').value;
+            const imagen_url = document.getElementById('juego-img').value;
+            const tags = document.getElementById('juego-tags').value.split(',').filter(t => t.trim() !== '');
+
+            const nombres = document.querySelectorAll('.srv-nombre');
+            const urls = document.querySelectorAll('.srv-url');
+            let enlaces = [];
+
+            nombres.forEach((n, i) => {
+                if(n.value && urls[i].value) enlaces.push({servidor: n.value, url: urls[i].value});
+            });
+
+            const res = await fetch('/api/admin/juegos', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({titulo, descripcion, plataforma, imagen_url, tags, enlaces})
+            });
+
+            const data = await res.json();
+            if(data.status === 'ok') {
+                alert("Juego publicado");
+                location.reload();
+            } else {
+                alert(data.mensaje);
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>
